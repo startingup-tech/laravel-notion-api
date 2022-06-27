@@ -24,6 +24,11 @@ class Database extends Endpoint
     private Collection $filter;
 
     /**
+     * @var string
+     */
+    private string $filterOperator;
+
+    /**
      * @var Collection
      */
     private Collection $sorts;
@@ -43,6 +48,7 @@ class Database extends Endpoint
 
         $this->sorts = new Collection();
         $this->filter = new Collection();
+        $this->filterOperator = 'or';
 
         parent::__construct($notion);
     }
@@ -62,7 +68,7 @@ class Database extends Endpoint
         }
 
         if ($this->filter->isNotEmpty()) {
-            $postData['filter']['or'] = Filter::filterQuery($this->filter);
+            $postData['filter'][$this->filterOperator] = Filter::filterQuery($this->filter);
         } // TODO Compound filters!
 
         if ($this->startCursor !== null) {
@@ -84,11 +90,13 @@ class Database extends Endpoint
     }
 
     /**
-     * @param  Collection  $filter
+     * @param Collection $filter
+     * @param string $
      * @return $this
      */
-    public function filterBy(Collection $filter): Database
+    public function filterBy(Collection $filter, string $filterOperator = 'or'): Database
     {
+        $this->filterOperator = $filterOperator;
         $this->filter = $filter;
 
         return $this;
