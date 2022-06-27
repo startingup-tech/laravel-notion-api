@@ -19,9 +19,9 @@ class Database extends Endpoint
     private string $databaseId;
 
     /**
-     * @var Collection
+     * @var Collection|array
      */
-    private Collection $filter;
+    private Collection|array $filter;
 
     /**
      * @var string
@@ -67,8 +67,8 @@ class Database extends Endpoint
             $postData['sorts'] = Sorting::sortQuery($this->sorts);
         }
 
-        if ($this->filter->isNotEmpty()) {
-            $postData['filter'][$this->filterOperator] = Filter::filterQuery($this->filter);
+        if ($this->hasFilters()) {
+            $postData['filter'][$this->filterOperator] = $this->filter;
         } // TODO Compound filters!
 
         if ($this->startCursor !== null) {
@@ -90,16 +90,23 @@ class Database extends Endpoint
     }
 
     /**
-     * @param Collection $filter
+     * @param Collection\array $filter
      * @param string $
      * @return $this
      */
-    public function filterBy(Collection $filter, string $filterOperator = 'or'): Database
+    public function filterBy(Collection|array $filter, string $filterOperator = 'or'): Database
     {
         $this->filterOperator = $filterOperator;
-        $this->filter = $filter;
+        $this->filter = is_array($filter) ? $filter : $filter->toArray();
 
         return $this;
+    }
+
+    public function hasFilters(): bool
+    {
+        return is_array($this->filter)
+            ? !empty($this->filter)
+            : $this->filter->isNotEmpty();
     }
 
     /**
